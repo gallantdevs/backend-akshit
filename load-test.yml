@@ -1,0 +1,34 @@
+config:
+  target: "http://localhost:1200"   # ✅ Your backend base URL
+  phases:
+    - duration: 60                  # 60 seconds warm-up
+      arrivalRate: 5              # 20 new users per second (≈ 3000 requests)
+    - duration: 60
+      arrivalRate: 10             # 100 new users/sec (≈ 12000 requests)
+      name: Load test
+  defaults:
+    headers:
+      Content-Type: "application/json"
+  variables:
+    productId: "68da87551c2fe329af7e8ef3"   # ✅ Actual productId (you can verify in Mongo)
+    token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4ZTBjYjYxMWE1NTY4Mjc3M2RiNmQ3ZSIsImlhdCI6MTc1OTU5MzY1NiwiZXhwIjoxNzYyMTg1NjU2fQ.io9f-Mj6Z112TbT9pEb83dFk60rgMcugZ0b-kgq_zFs"
+    color: "Soft Blue"
+    size: "32"
+
+scenarios:
+  - name: "User adds item to cart"
+    flow:
+      - post:
+          url: "/api/cart/add"
+          headers:
+            Authorization: "Bearer {{ token }}"     # ✅ Correct interpolation
+          json:
+            productId: "{{ productId }}"             # ✅ Variable used properly
+            color: "{{ color }}"
+            size: "{{ size }}"
+            quantity: 1
+      - think: 1
+      - get:
+          url: "/api/cart"
+          headers:
+            Authorization: "Bearer {{ token }}"      # ✅ Use same variable reference
