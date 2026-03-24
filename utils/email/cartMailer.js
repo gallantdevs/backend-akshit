@@ -1,4 +1,6 @@
-import sendEmail from "../sendEmail.js";
+// import sendEmail from "../sendEmail.js";
+// Aks
+import sendEmail from "../sendEmailAks.js";
 import { buildAddToCartHTML, buildAbandonedCartHTML } from "./cartTemplates.js";
 
 export const sendAddToCartEmail = async ({ to, user, cart, checkoutUrl }) => {

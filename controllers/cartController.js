@@ -283,15 +283,30 @@ export const addToCart = async (req, res) => {
     try {
       const user = await User.findById(userId).select("fullName email").lean();
       if (user?.email) {
-        const checkoutUrl = `${
-          process.env.FRONTEND_URL || "http://localhost:5173"
-        }/api/checkout`;
+
+        // Aks
+        // const checkoutUrl = `${
+        //   process.env.FRONTEND_URL || "http://localhost:5173"
+        // }/api/checkout`;
+        const checkoutUrl = "#";
+
         await sendAddToCartEmail({
           to: user.email,
           user,
           cart: populated || cart,
           checkoutUrl,
         });
+
+        // solution if still
+        // sendAddToCartEmail({
+        //   to: user.email,
+        //   user,
+        //   cart: populated || cart,
+        //   checkoutUrl,
+        // }).catch((err) => {
+        //   console.error("f* mail issue");
+        // });
+
       }
     } catch (mailErr) {
       console.error("AddToCart email failed:", mailErr.message);
