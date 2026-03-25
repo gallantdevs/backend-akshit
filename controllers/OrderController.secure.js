@@ -342,17 +342,25 @@ export const createOrderSecure = async (req, res) => {
     const newOrder = new Order(orderPayload);
     const savedOrder = await newOrder.save({ session });
 
-    try {
-      const adminEmail = process.env.ADMIN_EMAIL || "harshsepta49@gmail.com";
-      const emailHtml = getNewOrderAdminEmail(savedOrder);
-      await sendEmail({
-        to: adminEmail,
-        subject: `🎉 New Order Received! (ID: ${savedOrder._id})`,
-        html: emailHtml,
-      });
-    } catch (emailError) {
-      console.error("❌ Failed to send admin email:", emailError.message);
-    }
+    // try {
+    //   const adminEmail = process.env.ADMIN_EMAIL || "harshsepta49@gmail.com";
+    //   const emailHtml = getNewOrderAdminEmail(savedOrder);
+    //   await sendEmail({
+    //     to: adminEmail,
+    //     subject: `🎉 New Order Received! (ID: ${savedOrder._id})`,
+    //     html: emailHtml,
+    //   });
+    // } catch (emailError) {
+    //   console.error("❌ Failed to send admin email:", emailError.message);
+    // }
+
+    // Aks
+    // ✅ Email disabled
+    console.log("📧 [EMAIL DISABLED]");
+    console.log("Order ID:", savedOrder._id);
+    console.log("Order Data:", savedOrder);
+
+
     try {
       const io = req.app.get("socketio");
       if (io)
