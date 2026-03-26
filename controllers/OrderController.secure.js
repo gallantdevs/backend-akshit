@@ -27,6 +27,34 @@ const razorpay = new Razorpay({
   key_secret: process.env.RAZORPAY_KEY_SECRET,
 });
 
+// aks
+const dispatchOrderInternal = async (orderId) => {
+  const order = await Order.findById(orderId);
+
+  const srPayload = mapOrderToShiprocketPayload(order);
+  const srResponse = await createShiprocketOrder(srPayload);
+
+  console.log("🚀 SR Response:", srResponse);
+
+  order.shiprocketOrderId = srResponse.order_id;
+
+  const awbResponse = await assignAWB(order.shiprocketOrderId);
+
+  console.log("📦 AWB Response:", awbResponse);
+
+  const awb = awbResponse?.response?.awb_code;
+
+  if (!awb) {
+    throw new Error("❌ AWB not generated");
+  }
+
+  order.awbNumber = awb;
+
+  await order.save();
+
+  console.log("✅ AWB SAVED:", awb);
+};
+
 export const getInvoicePDF = async (req, res) => {
   try {
     const orderId = req.params.orderId;
@@ -373,6 +401,12 @@ export const createOrderSecure = async (req, res) => {
     }
 
     await session.commitTransaction();
+    // aks
+    try {
+      await dispatchOrderInternal(savedOrder._id);
+    } catch (err) {
+      console.error("Dispatch failed:", err);
+    }
     res.status(201).json({
       success: true,
       message: "Order placed successfully!",
@@ -626,6 +660,34 @@ export const dispatchOrder = async (req, res) => {
     // --- D. STOCK UPDATE (When shipped, not delivered)
     // ⚠️ Important: This reduces ONLY reserved, NOT total
     // Total stock will be reduced when status changes to "delivered"
+
+
+// Aks
+    if (!order.shiprocketOrderId) {
+      const srPayload = mapOrderToShiprocketPayload(order);
+
+      const srResponse = await createShiprocketOrder(srPayload);
+
+      console.log("🚀 Shiprocket order response:", srResponse);
+
+      order.shiprocketOrderId = srResponse.order_id;
+
+      await order.save({ session });
+    }
+
+    if (!order.awbNumber) {
+      const awbResponse = await assignAWB(order.shiprocketOrderId);
+
+      console.log("📦 AWB Response:", awbResponse);
+
+      order.awbNumber = awbResponse?.response?.awb_code;
+
+      await order.save({ session });
+    }
+
+
+
+
 
     if (order.orderStatus !== "shipped") {
       console.log(`📦 Dispatching order ${orderId} - Releasing reserved stock`);

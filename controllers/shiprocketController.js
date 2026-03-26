@@ -78,7 +78,7 @@ export async function assignAWB(shipmentId, courierId) {
 
   const payload = {
     shipment_id: [shipmentId], 
-    courier_id: courierId,
+    // courier_id: courierId,
   };
 
   const response = await fetch(
@@ -105,8 +105,32 @@ export async function assignAWB(shipmentId, courierId) {
 }
 
 // =========================================================
-// 3. SCHEDULE PICKUP
+// 4. GET SHIPMENT DETAILS
 // =========================================================
+export async function getShipmentDetails(shipmentId) {
+  const token = await getShiprocketToken();
+
+  const response = await fetch(
+    `https://apiv2.shiprocket.in/v1/external/shipments/${shipmentId}`,
+    {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+    }
+  );
+
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(
+      `❌ Shiprocket Shipment Details failed: ${JSON.stringify(error)}`
+    );
+  }
+
+  const data = await response.json();
+  return data;
+}
 export async function scheduleShiprocketPickup(shipmentId) {
   const token = await getShiprocketToken();
 
@@ -170,25 +194,53 @@ export const trackAWB = async (req, res) => {
 
       if (fallbackRes.ok) {
         const fallbackData = await fallbackRes.json();
+        console.log("Fallback tracking data:", JSON.stringify(fallbackData, null, 2));
         return res.status(200).json({ success: true, data: fallbackData });
       }
 
       const errText = await response.text();
+      console.error("Tracking API error:", errText);
       return res
         .status(400)
         .json({ success: false, message: "Failed to fetch tracking", err: errText });
     }
 
     const data = await response.json();
+    console.log("Tracking API response:", JSON.stringify(data, null, 2));
 
    
+    // const timeline =
+    //   data?.data?.tracking_details ||
+    //   data?.response?.tracking_details ||
+    //   data?.tracking_details ||
+    //   data?.data?.awb_data ||
+    //   data?.data ||
+    //   data; 
+
+    // // Check if tracking data is empty
+    // if (!timeline || (Array.isArray(timeline) && timeline.length === 0) || (timeline.activities && timeline.activities.length === 0)) {
+    //   return res.status(200).json({ 
+    //     success: true, 
+    //     message: "Tracking data not available yet. The shipment may not have been picked up or is still in processing.", 
+    //     tracking: [], 
+    //     raw: data 
+    //   });
+    // }
+
+    // aks
     const timeline =
-      data?.data?.tracking_details ||
-      data?.response?.tracking_details ||
-      data?.tracking_details ||
-      data?.data?.awb_data ||
-      data?.data ||
-      data; 
+  data?.tracking_data?.shipment_track_activities ||
+  data?.data?.tracking_data?.shipment_track_activities ||
+  [];
+
+if (!timeline.length) {
+  return res.status(200).json({
+    success: true,
+    message: "Tracking not available yet (not scanned by courier)",
+    tracking: [],
+    raw: data,
+  });
+}
 
     return res.status(200).json({ success: true, tracking: timeline, raw: data });
   } catch (error) {
