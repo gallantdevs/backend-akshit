@@ -167,10 +167,38 @@ export const createOrder = async (req, res) => {
       paymentMethod,
     } = req.body;
 
+    if (!user) {
+      return res
+        .status(400)
+        .json({ success: false, message: "User ID is required to create order." });
+    }
     if (!cartItems || cartItems.length === 0) {
       return res
         .status(400)
         .json({ success: false, message: "Cart is empty!" });
+    }
+
+    if (!shippingAddress || typeof shippingAddress !== "object") {
+      return res
+        .status(400)
+        .json({ success: false, message: "shippingAddress is required." });
+    }
+
+    const requiredAddressFields = ["name", "mobile", "address", "city", "state", "pincode"];
+    for (const field of requiredAddressFields) {
+      if (!shippingAddress[field] || String(shippingAddress[field]).trim().length === 0) {
+        return res.status(400).json({
+          success: false,
+          message: `shippingAddress.${field} is required for buy now flow`,
+        });
+      }
+    }
+
+    if (!paymentMethod || !["COD", "Online"].includes(paymentMethod)) {
+      return res.status(400).json({
+        success: false,
+        message: "paymentMethod is required and must be either 'COD' or 'Online'.",
+      });
     }
 
     let verifiedTotal = 0;
