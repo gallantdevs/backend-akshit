@@ -51,8 +51,17 @@ export const mapOrderToShiprocketPayload = (
     }
   });
 
-  const shiprocketState =
-    stateMap[order.shippingAddress.state] || order.shippingAddress.state;
+  const rawState = String(order.shippingAddress.state || "").trim();
+  const normalizedKey = Object.keys(stateMap).find(
+    (key) => key.toLowerCase() === rawState.toLowerCase()
+  );
+  const shiprocketState = stateMap[normalizedKey] || stateMap[rawState] || rawState;
+
+  const normalizeText = (str) =>
+    String(str || "").replace(/\n/g, " ").replace(/\s+/g, " ").trim();
+
+  const billingAddress = normalizeText(order.shippingAddress.address);
+  const shippingAddress = normalizeText(order.shippingAddress.address);
 
   // --- Product Mapping ---
   const orderItems = order.cartItems.map((item) => ({
@@ -72,18 +81,18 @@ export const mapOrderToShiprocketPayload = (
     billing_customer_name: order.shippingAddress.name,
     billing_email: order.user.email || "test@example.com",
     billing_phone: order.shippingAddress.mobile,
-    billing_address: order.shippingAddress.address,
-    billing_city: order.shippingAddress.city,
-    billing_pincode: order.shippingAddress.pincode,
+    billing_address: billingAddress,
+    billing_city: normalizeText(order.shippingAddress.city),
+    billing_pincode: normalizeText(order.shippingAddress.pincode),
     billing_state: shiprocketState,
     billing_country: "India",
 
     shipping_customer_name: order.shippingAddress.name,
     shipping_email: order.user.email || "test@example.com",
     shipping_phone: order.shippingAddress.mobile,
-    shipping_address: order.shippingAddress.address,
-    shipping_city: order.shippingAddress.city,
-    shipping_pincode: order.shippingAddress.pincode,
+    shipping_address: shippingAddress,
+    shipping_city: normalizeText(order.shippingAddress.city),
+    shipping_pincode: normalizeText(order.shippingAddress.pincode),
     shipping_state: shiprocketState, // ✅ MAPPED STATE CODE
     shipping_country: "India",
 
