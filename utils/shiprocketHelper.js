@@ -69,14 +69,21 @@ export const mapOrderToShiprocketPayload = (
     sku: item.product.sku || item.product._id.toString().slice(-6),
     units: item.quantity,
     price: item.price,
+    selling_price: item.price,
     hsn: item.product.hsnCode || "",
   }));
+
+  const pickupPostcode =
+    process.env.SHIPROCKET_PICKUP_PINCODE &&
+    String(process.env.SHIPROCKET_PICKUP_PINCODE).trim();
 
   return {
     order_id: order._id.toString(),
     order_date: new Date(order.createdAt).toISOString().split("T")[0],
 
     pickup_location: pickupLocationName,
+    pickup_postcode: pickupPostcode,
+    pickup_country: "India",
 
     billing_customer_name: order.shippingAddress.name,
     billing_email: order.user.email || "test@example.com",
