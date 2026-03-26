@@ -62,7 +62,7 @@ export async function createShiprocketOrder(orderPayload) {
   if (!response.ok) {
     const error = await response.json();
     throw new Error(
-      `❌ Shiprocket Order Creation failed: ${JSON.stringify(error)}`
+      `❌ Shiprocket Order Creation failed: ${JSON.stringify(error)}; payload: ${JSON.stringify(orderPayload)}`
     );
   }
 

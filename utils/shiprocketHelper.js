@@ -40,6 +40,17 @@ export const mapOrderToShiprocketPayload = (
     // Add more if needed
   };
 
+  if (!order || !order.shippingAddress) {
+    throw new Error("Shiprocket payload mapping failed: missing shippingAddress");
+  }
+
+  const requiredFields = ["name", "mobile", "address", "city", "state", "pincode"];
+  requiredFields.forEach((field) => {
+    if (!order.shippingAddress[field] || String(order.shippingAddress[field]).trim().length === 0) {
+      throw new Error(`Shiprocket payload mapping failed: shippingAddress.${field} is required`);
+    }
+  });
+
   const shiprocketState =
     stateMap[order.shippingAddress.state] || order.shippingAddress.state;
 
@@ -77,7 +88,8 @@ export const mapOrderToShiprocketPayload = (
     shipping_country: "India",
 
     order_items: orderItems,
-    payment_method: order.paymentMethod,
+    payment_method:
+      order.paymentMethod === "Online" ? "Prepaid" : order.paymentMethod === "COD" ? "COD" : order.paymentMethod,
 
     // Final Price Details
     shipping_charges: order.shippingCharge || 0,

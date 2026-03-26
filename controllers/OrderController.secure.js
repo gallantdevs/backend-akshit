@@ -664,6 +664,10 @@ export const dispatchOrder = async (req, res) => {
 
 // Aks
     if (!order.shiprocketOrderId) {
+      if (!order.shippingAddress) {
+        throw new Error("Dispatch failed: missing order.shippingAddress for Shiprocket registration");
+      }
+
       const srPayload = mapOrderToShiprocketPayload(order);
 
       const srResponse = await createShiprocketOrder(srPayload);
