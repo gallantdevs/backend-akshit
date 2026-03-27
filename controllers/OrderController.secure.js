@@ -29,16 +29,26 @@ const razorpay = new Razorpay({
 
 // aks
 const dispatchOrderInternal = async (orderId) => {
-  const order = await Order.findById(orderId);
+  const order = await Order.findById(orderId)
+    .populate("cartItems.product")
+    .populate("user");
 
   const srPayload = mapOrderToShiprocketPayload(order);
   const srResponse = await createShiprocketOrder(srPayload);
 
   console.log("🚀 SR Response:", srResponse);
 
+  // ✅ SAVE BOTH
   order.shiprocketOrderId = srResponse.order_id;
+  order.shiprocketShipmentId = srResponse.shipment_id;
 
-  const awbResponse = await assignAWB(order.shiprocketOrderId);
+  await order.save();
+
+  // ⏳ delay (VERY IMPORTANT)
+  await new Promise((r) => setTimeout(r, 1500));
+
+  // ✅ USE shipment_id
+  const awbResponse = await assignAWB(order.shiprocketShipmentId);
 
   console.log("📦 AWB Response:", awbResponse);
 
@@ -670,13 +680,20 @@ export const dispatchOrder = async (req, res) => {
 
       console.log("🚀 Shiprocket order response:", srResponse);
 
+      // order.shiprocketOrderId = srResponse.order_id;
+      // aks
       order.shiprocketOrderId = srResponse.order_id;
+      order.shiprocketShipmentId = srResponse.shipment_id; // ✅ ADD THIS
 
       await order.save({ session });
     }
 
     if (!order.awbNumber) {
-      const awbResponse = await assignAWB(order.shiprocketOrderId);
+      // const awbResponse = await assignAWB(order.shiprocketOrderId);
+      //  aks
+      // ⏳ small delay
+      await new Promise((r) => setTimeout(r, 1500));
+      const awbResponse = await assignAWB(order.shiprocketShipmentId);
 
       console.log("📦 AWB Response:", awbResponse);
 
