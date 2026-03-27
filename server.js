@@ -210,7 +210,7 @@ app.use("/api/upload", uploadRoutes);
 app.get("/api/test-email", async (req, res) => {
   try {
     await sendEmail({
-      to: "your-email@gmail.com", // 🔁 put your email
+      to: "gallantdevs@gmail.com",
       subject: "Test Email 🚀",
       message: "This is a test email",
       html: "<h2>✅ Email working!</h2>",
