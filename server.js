@@ -24,6 +24,7 @@ import wishlistRoutes from "./routes/WishListRoutes.js";
 import uploadRoutes from "./routes/uploadRoutes.js";
 import { startCleanupCronJob } from "./utils/cleanupService.js";
 import { scheduleAbandonedCartJob } from "./utils/abandonedCartJob.js";
+import sendEmail from "./utils/sendEmail.js";
 
 const app = express();
 dotenv.config();
@@ -206,5 +207,20 @@ app.use("/api/order", orderRoutes);
 app.use("/api/payment", PaymentRoutes);
 app.use("/api/wishlist", wishlistRoutes);
 app.use("/api/upload", uploadRoutes);
+app.get("/api/test-email", async (req, res) => {
+  try {
+    await sendEmail({
+      to: "your-email@gmail.com", // 🔁 put your email
+      subject: "Test Email 🚀",
+      message: "This is a test email",
+      html: "<h2>✅ Email working!</h2>",
+    });
+
+    res.json({ success: true, message: "Email sent successfully" });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
 scheduleAbandonedCartJob();
 initializeApp();
